@@ -21,7 +21,7 @@
     }
     document.getElementById("createRoom").onclick = () => {
       const roomId = generateId();
-      const link = `${location.origin}/room.html?room=${roomId}`;
+      const link = `${location.origin}/room.html#${roomId}`;
       document.getElementById("roomLink").value = link;
       document.getElementById("linkBox").classList.remove("hidden");
     };
