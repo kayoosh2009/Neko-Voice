@@ -1,23 +1,89 @@
 body {
-  font-family: sans-serif;
+  margin: 0;
+  font-family: 'Nunito', sans-serif;
+  background-color: #121212;
+  color: #fff;
   text-align: center;
-  background: #f0f0f0;
-  padding: 2rem;
 }
-#app {
-  background: white;
-  padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.1);
-  display: inline-block;
+
+.center-box {
+  margin-top: 20vh;
 }
+
+.logo {
+  font-size: 2.5rem;
+}
+.logo span {
+  color: #ff82c2;
+}
+
+button {
+  background: #ff82c2;
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  font-size: 1rem;
+  border-radius: 30px;
+  cursor: pointer;
+  margin-top: 20px;
+}
+button:hover {
+  background: #ff64b0;
+}
+
+input {
+  padding: 8px;
+  border-radius: 10px;
+  border: none;
+  width: 70%;
+  text-align: center;
+}
+
+#linkBox {
+  margin-top: 20px;
+}
+
+.hidden {
+  display: none;
+}
+
 #users {
-  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 1rem;
+  gap: 1rem;
 }
-.user {
-  margin: 0.5rem;
+
+.avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  filter: brightness(0.5);
+  transition: all 0.3s ease;
+  box-shadow: 0 0 10px #ff82c260;
 }
-#mute-btn {
-  margin-top: 1rem;
-  padding: 0.5rem 1rem;
+
+.avatar.speaking {
+  transform: scale(1.1);
+  filter: brightness(1);
+  box-shadow: 0 0 20px #ff82c2;
+}
+
+.controls {
+  position: fixed;
+  bottom: 20px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.controls button {
+  width: 60px;
+  height: 60px;
+  font-size: 1.5rem;
+  border-radius: 50%;
 }
