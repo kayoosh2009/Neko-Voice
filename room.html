@@ -1,9 +1,95 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Комната | NekoVoice</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      margin: 0;
+      background: #1e1e2f;
+      color: #cdd6f4;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    .room-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      background: #313244;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+      user-select: none;
+    }
+    #timer {
+      font-size: 1.5rem;
+      font-weight: 600;
+      font-family: monospace;
+    }
+    #users {
+      flex-grow: 1;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      padding: 1rem 2rem;
+      overflow-y: auto;
+      justify-content: center;
+      align-content: flex-start;
+    }
+    .avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background-size: cover;
+      background-position: center;
+      filter: brightness(0.4);
+      transition: filter 0.3s ease, transform 0.3s ease;
+      position: relative;
+    }
+    .avatar.speaking {
+      filter: brightness(1);
+      transform: scale(1.15);
+      z-index: 10;
+      box-shadow: 0 0 15px #f38ba8;
+    }
+    .avatar::after {
+      content: attr(title);
+      position: absolute;
+      bottom: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #cdd6f4;
+      font-size: 0.75rem;
+      white-space: nowrap;
+      user-select: none;
+    }
+    .controls {
+      display: flex;
+      justify-content: center;
+      padding: 1rem;
+      gap: 1rem;
+      background: #313244;
+      box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.5);
+      user-select: none;
+    }
+    .controls button {
+      background: #585b70;
+      border: none;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      font-size: 1.5rem;
+      color: #cdd6f4;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .controls button:hover {
+      background: #f38ba8;
+      color: #1e1e2f;
+    }
+  </style>
 </head>
 <body>
   <div class="room-header">
@@ -14,90 +100,112 @@
   <div id="users"></div>
 
   <div class="controls">
-    <button id="info">ℹ️</button>
-    <button id="settings">⚙️</button>
-    <button id="mute">🎙️</button>
-    <button id="leave">🚪</button>
+    <button id="info" title="Информация о чате">ℹ️</button>
+    <button id="settings" title="Настройки">⚙️</button>
+    <button id="mute" title="Включить/выключить микрофон">🎙️</button>
+    <button id="leave" title="Выйти из комнаты">🚪</button>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <script>
+    // Получаем roomId из хэша URL
     const roomId = location.hash.substring(1);
-    let myStream;
-    let peers = {};
+
+    const usersContainer = document.getElementById("users");
+    const timerEl = document.getElementById("timer");
+
+    let localStream;
+    let peer;
     let myId;
-
-    const peer = new Peer(undefined, {
-      host: "peerjs.com",
-      secure: true,
-      port: 443
-    });
-
-    peer.on("open", id => {
-      myId = id;
-      navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-        myStream = stream;
-        addUser(id, "Ты");
-
-        peer.on("call", call => {
-          call.answer(stream);
-          call.on("stream", remote => {
-            addUser(call.peer, "Гость", remote);
-          });
-        });
-
-        // (Для реальных комнат нужен сервер, пока пропускаем)
-      });
-    });
-
-    function addUser(id, label, stream = null) {
-      const user = document.createElement("div");
-      user.className = "avatar";
-      user.id = `user-${id}`;
-      user.title = label;
-      user.style.backgroundImage = `url('https://api.dicebear.com/8.x/lorelei/svg?seed=${id}')`;
-      document.getElementById("users").appendChild(user);
-
-      if (stream) {
-        const audio = document.createElement("audio");
-        audio.srcObject = stream;
-        audio.play();
-
-        const audioCtx = new AudioContext();
-        const src = audioCtx.createMediaStreamSource(stream);
-        const analyser = audioCtx.createAnalyser();
-        src.connect(analyser);
-        const data = new Uint8Array(analyser.frequencyBinCount);
-
-        function detectSpeech() {
-          analyser.getByteFrequencyData(data);
-          const volume = data.reduce((a, b) => a + b, 0) / data.length;
-          const el = document.getElementById(`user-${id}`);
-          if (volume > 10) {
-            el.classList.add("speaking");
-          } else {
-            el.classList.remove("speaking");
-          }
-          requestAnimationFrame(detectSpeech);
-        }
-        detectSpeech();
-      }
-    }
 
     // Таймер
     let seconds = 0;
     setInterval(() => {
       seconds++;
-      const m = String(Math.floor(seconds / 60)).padStart(2, '0');
-      const s = String(seconds % 60).padStart(2, '0');
-      document.getElementById("timer").innerText = `${m}:${s}`;
+      const m = String(Math.floor(seconds / 60)).padStart(2, "0");
+      const s = String(seconds % 60).padStart(2, "0");
+      timerEl.textContent = `${m}:${s}`;
     }, 1000);
 
-    // Кнопки
+    // Добавить аватар пользователя
+    function addUser(id, label, stream = null) {
+      if (document.getElementById("user-" + id)) return; // Уже есть
+
+      const userDiv = document.createElement("div");
+      userDiv.className = "avatar";
+      userDiv.id = "user-" + id;
+      userDiv.title = label;
+      userDiv.style.backgroundImage = `url('https://api.dicebear.com/8.x/lorelei/svg?seed=${id}')`;
+      usersContainer.appendChild(userDiv);
+
+      if (stream) {
+        const audio = document.createElement("audio");
+        audio.srcObject = stream;
+        audio.autoplay = true;
+
+        // Анализатор для определения говорящего
+        const audioCtx = new AudioContext();
+        const source = audioCtx.createMediaStreamSource(stream);
+        const analyser = audioCtx.createAnalyser();
+        source.connect(analyser);
+        analyser.fftSize = 512;
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+        function detectSpeaking() {
+          analyser.getByteFrequencyData(dataArray);
+          const volume = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+          if (volume > 10) {
+            userDiv.classList.add("speaking");
+          } else {
+            userDiv.classList.remove("speaking");
+          }
+          requestAnimationFrame(detectSpeaking);
+        }
+        detectSpeaking();
+      }
+    }
+
+    // Инициализация PeerJS
+    function initPeer() {
+      peer = new Peer(undefined, {
+        host: "peerjs.com",
+        secure: true,
+        port: 443,
+      });
+
+      peer.on("open", (id) => {
+        myId = id;
+        addUser(id, "Ты");
+
+        navigator.mediaDevices
+          .getUserMedia({ audio: true })
+          .then((stream) => {
+            localStream = stream;
+
+            // Обработка входящих вызовов
+            peer.on("call", (call) => {
+              call.answer(stream);
+              call.on("stream", (remoteStream) => {
+                addUser(call.peer, "Гость", remoteStream);
+              });
+            });
+
+            // Здесь можно добавить логику для подключения к другим пирами (через signaling сервер)
+          })
+          .catch((err) => {
+            alert("Ошибка доступа к микрофону: " + err);
+          });
+      });
+    }
+
+    initPeer();
+
+    // Кнопки управления
     document.getElementById("mute").onclick = () => {
-      const track = myStream.getAudioTracks()[0];
-      track.enabled = !track.enabled;
-      alert(track.enabled ? "🎙️ Микрофон включен" : "🔇 Микрофон выключен");
+      if (!localStream) return;
+      const audioTrack = localStream.getAudioTracks()[0];
+      audioTrack.enabled = !audioTrack.enabled;
+      alert(audioTrack.enabled ? "🎙️ Микрофон включен" : "🔇 Микрофон выключен");
     };
 
     document.getElementById("leave").onclick = () => {
@@ -105,11 +213,16 @@
     };
 
     document.getElementById("info").onclick = () => {
-      alert(`Комната: ${roomId}\nСоздано: ${new Date().toLocaleString()}`);
+      alert(
+        `Информация о комнате:\n` +
+          `ID комнаты: ${roomId}\n` +
+          `Дата создания: ${new Date().toLocaleString()}\n` +
+          `Рекорд пользователей: (пока недоступно)`
+      );
     };
 
     document.getElementById("settings").onclick = () => {
-      alert("Настройки скоро будут 🛠️");
+      alert("Настройки скоро появятся!");
     };
   </script>
 </body>
