@@ -15,16 +15,19 @@
       <button onclick="copyRoomLink()">Скопировать</button>
     </div>
   </div>
+
   <script>
     function generateId() {
       return Math.random().toString(36).substring(2, 8);
     }
+
     document.getElementById("createRoom").onclick = () => {
       const roomId = generateId();
-      const link = `${location.origin}/room.html#${roomId}`;
+      const link = `${location.origin}${location.pathname.replace("index.html", "")}room.html#${roomId}`;
       document.getElementById("roomLink").value = link;
       document.getElementById("linkBox").classList.remove("hidden");
     };
+
     function copyRoomLink() {
       const input = document.getElementById("roomLink");
       input.select();
