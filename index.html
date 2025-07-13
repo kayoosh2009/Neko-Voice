@@ -1,21 +1,36 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Voice Chat</title>
+  <meta charset="UTF-8">
+  <title>NekoVoice | Создать комнату</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div id="app">
-    <h1>🗣️ Voice Chat Room</h1>
-    <p id="room-name"></p>
-    <div id="users"></div>
-    <button id="mute-btn">Mute</button>
+  <div class="center-box">
+    <h1 class="logo">Neko<span>Voice</span> 😺</h1>
+    <button id="createRoom">Создать комнату</button>
+    <div id="linkBox" class="hidden">
+      <p>Ваша комната готова! Скопируйте ссылку:</p>
+      <input id="roomLink" readonly>
+      <button onclick="copyRoomLink()">Скопировать</button>
+    </div>
   </div>
-
-  <!-- PeerJS CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.2/dist/peerjs.min.js"></script>
-  <script src="script.js"></script>
+  <script>
+    function generateId() {
+      return Math.random().toString(36).substring(2, 8);
+    }
+    document.getElementById("createRoom").onclick = () => {
+      const roomId = generateId();
+      const link = `${location.origin}/room.html?room=${roomId}`;
+      document.getElementById("roomLink").value = link;
+      document.getElementById("linkBox").classList.remove("hidden");
+    };
+    function copyRoomLink() {
+      const input = document.getElementById("roomLink");
+      input.select();
+      document.execCommand("copy");
+      alert("Ссылка скопирована!");
+    }
+  </script>
 </body>
 </html>
