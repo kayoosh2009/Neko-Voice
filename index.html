@@ -1,19 +1,74 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>NekoVoice | Создать комнату</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      background: #1e1e2f;
+      color: #cdd6f4;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .logo {
+      font-size: 3rem;
+      margin-bottom: 2rem;
+      user-select: none;
+    }
+    .logo span {
+      color: #f38ba8;
+    }
+    button {
+      background: #313244;
+      border: none;
+      padding: 1rem 2rem;
+      border-radius: 12px;
+      font-size: 1.25rem;
+      color: #cdd6f4;
+      cursor: pointer;
+      transition: background 0.3s;
+      user-select: none;
+    }
+    button:hover {
+      background: #585b70;
+    }
+    #linkBox {
+      margin-top: 1.5rem;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+    }
+    #linkBox p {
+      margin: 0 0 0.5rem 0;
+    }
+    #roomLink {
+      width: 320px;
+      padding: 0.5rem;
+      border-radius: 8px;
+      border: none;
+      font-size: 1rem;
+      user-select: all;
+      text-align: center;
+      background: #313244;
+      color: #cdd6f4;
+      margin-bottom: 0.5rem;
+    }
+  </style>
 </head>
 <body>
-  <div class="center-box">
-    <h1 class="logo">Neko<span>Voice</span> 😺</h1>
-    <button id="createRoom">Создать комнату</button>
-    <div id="linkBox" class="hidden">
-      <p>Ваша комната готова! Скопируйте ссылку:</p>
-      <input id="roomLink" readonly>
-      <button onclick="copyRoomLink()">Скопировать</button>
-    </div>
+  <h1 class="logo">Neko<span>Voice</span> 😺</h1>
+  <button id="createRoom">Создать комнату</button>
+
+  <div id="linkBox">
+    <p>Ваша комната готова! Скопируйте ссылку:</p>
+    <input id="roomLink" readonly />
+    <button id="copyBtn">Скопировать</button>
   </div>
 
   <script>
@@ -21,19 +76,26 @@
       return Math.random().toString(36).substring(2, 8);
     }
 
-    document.getElementById("createRoom").onclick = () => {
+    const createBtn = document.getElementById("createRoom");
+    const linkBox = document.getElementById("linkBox");
+    const roomLinkInput = document.getElementById("roomLink");
+    const copyBtn = document.getElementById("copyBtn");
+
+    createBtn.onclick = () => {
       const roomId = generateId();
-      const link = `${location.origin}${location.pathname.replace("index.html", "")}room.html#${roomId}`;
-      document.getElementById("roomLink").value = link;
-      document.getElementById("linkBox").classList.remove("hidden");
+      // Формируем ссылку с хэшем
+      const link =
+        location.origin + location.pathname.replace("index.html", "") + "room.html#" + roomId;
+      roomLinkInput.value = link;
+      linkBox.style.display = "flex";
     };
 
-    function copyRoomLink() {
-      const input = document.getElementById("roomLink");
-      input.select();
-      document.execCommand("copy");
-      alert("Ссылка скопирована!");
-    }
+    copyBtn.onclick = () => {
+      roomLinkInput.select();
+      navigator.clipboard.writeText(roomLinkInput.value).then(() => {
+        alert("Ссылка скопирована в буфер обмена!");
+      });
+    };
   </script>
 </body>
 </html>
