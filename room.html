@@ -10,7 +10,9 @@
     <h1>Комната NekoVoice</h1>
     <div id="timer">00:00</div>
   </div>
+
   <div id="users"></div>
+
   <div class="controls">
     <button id="info">ℹ️</button>
     <button id="settings">⚙️</button>
@@ -19,6 +21,96 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.2/dist/peerjs.min.js"></script>
-  <script src="script.js"></script>
+  <script>
+    const roomId = location.hash.substring(1);
+    let myStream;
+    let peers = {};
+    let myId;
+
+    const peer = new Peer(undefined, {
+      host: "peerjs.com",
+      secure: true,
+      port: 443
+    });
+
+    peer.on("open", id => {
+      myId = id;
+      navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+        myStream = stream;
+        addUser(id, "Ты");
+
+        peer.on("call", call => {
+          call.answer(stream);
+          call.on("stream", remote => {
+            addUser(call.peer, "Гость", remote);
+          });
+        });
+
+        // (Для реальных комнат нужен сервер, пока пропускаем)
+      });
+    });
+
+    function addUser(id, label, stream = null) {
+      const user = document.createElement("div");
+      user.className = "avatar";
+      user.id = `user-${id}`;
+      user.title = label;
+      user.style.backgroundImage = `url('https://api.dicebear.com/8.x/lorelei/svg?seed=${id}')`;
+      document.getElementById("users").appendChild(user);
+
+      if (stream) {
+        const audio = document.createElement("audio");
+        audio.srcObject = stream;
+        audio.play();
+
+        const audioCtx = new AudioContext();
+        const src = audioCtx.createMediaStreamSource(stream);
+        const analyser = audioCtx.createAnalyser();
+        src.connect(analyser);
+        const data = new Uint8Array(analyser.frequencyBinCount);
+
+        function detectSpeech() {
+          analyser.getByteFrequencyData(data);
+          const volume = data.reduce((a, b) => a + b, 0) / data.length;
+          const el = document.getElementById(`user-${id}`);
+          if (volume > 10) {
+            el.classList.add("speaking");
+          } else {
+            el.classList.remove("speaking");
+          }
+          requestAnimationFrame(detectSpeech);
+        }
+        detectSpeech();
+      }
+    }
+
+    // Таймер
+    let seconds = 0;
+    setInterval(() => {
+      seconds++;
+      const m = String(Math.floor(seconds / 60)).padStart(2, '0');
+      const s = String(seconds % 60).padStart(2, '0');
+      document.getElementById("timer").innerText = `${m}:${s}`;
+    }, 1000);
+
+    // Кнопки
+    document.getElementById("mute").onclick = () => {
+      const track = myStream.getAudioTracks()[0];
+      track.enabled = !track.enabled;
+      alert(track.enabled ? "🎙️ Микрофон включен" : "🔇 Микрофон выключен");
+    };
+
+    document.getElementById("leave").onclick = () => {
+      location.href = "index.html";
+    };
+
+    document.getElementById("info").onclick = () => {
+      alert(`Комната: ${roomId}\nСоздано: ${new Date().toLocaleString()}`);
+    };
+
+    document.getElementById("settings").onclick = () => {
+      alert("Настройки скоро будут 🛠️");
+    };
+  </script>
 </body>
 </html>
